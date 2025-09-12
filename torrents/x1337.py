@@ -22,9 +22,7 @@ class x1337:
                 html = await res.text(encoding="ISO-8859-1")
                 soup = BeautifulSoup(html, "html.parser")
                 try:
-                    magnet = soup.select_one(".no-top-radius > div > ul > li > a")[
-                        "href"
-                    ]
+                    magnet = soup.select_one(".no-top-radius > div > ul > li > a")["href"]
                     uls = soup.find_all("ul", class_="list")[1]
                     lis = uls.find_all("li")[0]
                     imgs = [
@@ -39,6 +37,28 @@ class x1337:
                         obj["screenshot"] = imgs
                     obj["category"] = lis.find("span").text
                     obj["files"] = files
+                    genres_div = soup.find("div", class_="torrent-category")
+                    
+                    # extract the movie genres
+                    if genres_div:
+                        genres = [span.get_text(strip=True) for span in genres_div.find_all("span")]
+                        obj["genres"] = genres
+
+                    # extract description: prefer the <p> inside .content-row (sibling of .torrent-category)
+                    description = None
+                    desc_tag = soup.select_one("div.torrent-detail-info div.content-row > p")
+                    if not desc_tag:
+                        # try a more permissive lookup
+                        content_row = soup.find("div", class_="content-row")
+                        if content_row:
+                            desc_tag = content_row.find("p")
+                    if desc_tag:
+                        description = desc_tag.get_text(separator=" ", strip=True)
+                    else:
+                        return
+                    if description:
+                        # normalize whitespaces
+                        obj["description"] = " ".join(description.split())
                     try:
                         poster = soup.select_one("div.torrent-image img")["src"]
                         if str(poster).startswith("//"):
