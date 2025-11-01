@@ -40,6 +40,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Expose configured URLs available through environment variables (docker-compose .env)
+import os
+app.state.TORRENT_API_URL = os.environ.get("TORRENT_API_URL", "http://localhost:8009")
+app.state.BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8080")
+
+
 
 @app.get("/health")
 async def health_route(req: Request):
